@@ -34,13 +34,48 @@ const createPreferPlaceOptions = R.compose(
   R.path(["types"])
 )
 
+const CustomTip = createReactClass({
+  displayName: "tip",
+  render () {
+    const { direction } = this.props
+    const size = this.props.size || 24
+    const isPortrait = direction === "up" || direction === "down"
+    const mainLength = size
+    const crossLength = size * 2
+    const points = (
+      direction === "up" ? `0,${mainLength} ${mainLength},0, ${crossLength},${mainLength}`
+      : direction === "down" ? `0,0 ${mainLength},${mainLength}, ${crossLength},0`
+      : direction === "left" ? `${mainLength},0 0,${mainLength}, ${mainLength},${crossLength}`
+      : `0,0 ${mainLength},${mainLength}, 0,${crossLength}`
+    )
+    const props = {
+      className: "Popover-tip",
+      width: isPortrait ? crossLength : mainLength,
+      height: isPortrait ? mainLength : crossLength,
+    }
+    const triangle = (
+      E.svg(props,
+        E.polygon({
+          className: "customTip",
+          fill: "red",
+          points,
+        })
+      )
+    )
+    return (
+      triangle
+    )
+  },
+})
+
 const Demo = createReactClass({
   displayName: "demo",
   getInitialState () {
     return {
       popoverIsOpen: false,
       preferPlace: null,
-      place: null
+      place: null,
+      slide: false
     }
   },
   togglePopover (toState) {
@@ -59,6 +94,14 @@ const Demo = createReactClass({
   changePlace (event) {
     const place = event.target.value === "null" ? null : event.target.value
     this.setState({ place })
+  },
+  changeTip (event) {
+    const TipCls = event.target.value === "null" ? undefined : CustomTip
+    this.setState({ TipCls })
+  },
+  changeSlide (event) {
+    const slide = event.target.value === "yes"
+    this.setState({ slide })
   },
   render () {
     debug("render")
@@ -93,9 +136,11 @@ const Demo = createReactClass({
     )
 
     const popoverProps = {
+      Tip: this.state.TipCls,
       isOpen: this.state.popoverIsOpen,
       preferPlace: this.state.preferPlace,
       place: this.state.place,
+      slide: this.state.slide,
       onOuterAction: this.togglePopover.bind(null, false),
       body: [
         E.h1({}, "Popover Title"),
@@ -112,6 +157,20 @@ const Demo = createReactClass({
         E.label({ htmlFor: "place" }, "place "),
         E.select({ id: "place", onChange: this.changePlace },
           createPreferPlaceOptions(Layout)
+        ),
+        E.label({ htmlFor: "tip" }, "tip "),
+        E.select({ id: "tip", onChange: this.changeTip },
+          [
+            E.option({ key: "null", value: null }, "null"),
+            E.option({ key: "custom", value: "custom" }, "custom")
+          ]
+        ),
+        E.label({ htmlFor: "slide" }, "slide "),
+        E.select({ id: "slide", onChange: this.changeSlide },
+          [
+            E.option({ key: "no", value: "no" }, "no"),
+            E.option({ key: "yes", value: "yes" }, "yes")
+          ]
         )
 
       )
